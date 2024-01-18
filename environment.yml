@@ -14,7 +14,7 @@ dependencies:
   - nrel-pysam-stubs    # BSD-3-Clause license
   - numpy               # BSD-3-Clause license
   - openpyxl            # MIT license
-  - pandas              # BSD-3-Clause license
+  - pandas=1.5.3        # BSD-3-Clause license
   - pint                # BSD license
   - plotly              # MIT license
   - pyomo>=6.0.0,<=6.4.0       # BSD license

@@ -10,8 +10,8 @@ dependencies:
   - ipython             # BSD License
   - nbconvert           # BSD-3-Clause license
   - nbformat            # BSD-3-Clause license
-  - nrel-pysam>=3.0.1   # BSD-3-Clause license
-  - nrel-pysam-stubs    # BSD-3-Clause license
+  - nrel-pysam=3.0.1   # BSD-3-Clause license
+  - nrel-pysam-stubs=3.0.0    # BSD-3-Clause license
   - numpy               # BSD-3-Clause license
   - openpyxl            # MIT license
   - pandas=1.5.3        # BSD-3-Clause license

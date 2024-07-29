@@ -696,6 +696,9 @@ def generate_inputs(model_workspace):
     for index, row in vcf_sets.iterrows():
         gen_set = row["gen_set"]
         resource_years = ast.literal_eval(row["years"])
+        ###REMOVE
+        resource_years
+        ###END
         set_scenario_list = row["scenario"]
 
         print(f"Generating capacity factor timeseries for {gen_set}")

@@ -678,16 +678,19 @@ def hourly_cost_of_power(
     if len(ra_summary) > 0:
         ra_open = ra_summary.copy()
 
-        # set the excess RA value as a negative cost
-        ra_open["Excess_RA_Value"] = -ra_open["Excess_RA_Value"]
+        try:
+            ra_open["RA_Open_Position_Cost"]    = ra_open['New_RA_Cost_$']/12
+            ra_open["Excess_RA_Value"]          = 0
+        except:
+            ra_open["Excess_RA_Value"] = -ra_open["Excess_RA_Value"]
 
         # calculate annual ra costs
         ra_open = ra_open[["RA_Open_Position_Cost", "Excess_RA_Value"]].sum()
 
         # divide these costs by the number of timepoints
-        ra_open = ra_open / len(hourly_costs.index)
+        ra_open = ra_open / len(hourly_costs.index)            
 
-        # add the RA costs to the hourly costs
+        # # add the RA costs to the hourly costs
         hourly_costs["ra_open_position_cost"] = ra_open["RA_Open_Position_Cost"]
         hourly_costs["excess_ra_value"] = ra_open["Excess_RA_Value"]
 

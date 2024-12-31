@@ -4,22 +4,22 @@ channels:
   - conda-forge
   - defaults
 dependencies:
-  - cloudpickle         # BSD-3-Clause license
-  - glpk                # GNU GPL license
-  - ipykernel           # BSD-3-Clause license
-  - ipython             # BSD License
-  - nbconvert           # BSD-3-Clause license
-  - nbformat            # BSD-3-Clause license
-  - nrel-pysam=3.0.1   # BSD-3-Clause license
-  - nrel-pysam-stubs=3.0.0    # BSD-3-Clause license
-  - numpy               # BSD-3-Clause license
-  - openpyxl            # MIT license
-  - pandas=1.5.3        # BSD-3-Clause license
-  - pint                # BSD license
-  - plotly              # MIT license
-  - pyomo>=6.0.0,<=6.4.0       # BSD license
-  - python>=2.7.12      # Python Software Foundation License
-  - pytz                # MIT license
-  - pyutilib>=6.0.0     # GNU AGPLv3 license
-  - requests            # Apache 2.0 license
-  - xlrd                # BSD license
+  - cloudpickle                         # BSD-3-Clause license
+  - glpk                                # GNU GPL license
+  - ipykernel                           # BSD-3-Clause license
+  - ipython                             # BSD License
+  - nbconvert         = 6.5.0           # BSD-3-Clause license
+  - nbformat          = 5.3.0           # BSD-3-Clause license
+  - nrel-pysam        = 3.0.1           # BSD-3-Clause license
+  - nrel-pysam-stubs  = 3.0.0           # BSD-3-Clause license
+  - numpy             = 1.22.3          # BSD-3-Clause license, NEED TO CHANGE VERSION
+  - openpyxl                            # MIT license
+  - pandas            = 1.5.3           # BSD-3-Clause license
+  - pint                                # BSD license
+  - plotly            = 5.7.0           # MIT license
+  - pyomo             >=6.0.0, <=6.4.0  # BSD license
+  - python            >=2.7.12          # Python Software Foundation License
+  - pytz                                # MIT license
+  - pyutilib          >=6.0.0           # GNU AGPLv3 license
+  - requests                            # Apache 2.0 license
+  - xlrd                                  # BSD license

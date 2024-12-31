@@ -225,6 +225,50 @@ def define_components(mod):
         initialize=lambda m: {m.gen_tech[g] for g in m.GENERATION_PROJECTS},
         ordered=False,
     )
+
+    ### SOD UPDATE: add sets for gen_tech_sod and region_sod
+    # mod.gen_tech_sod = Param(mod.GENERATION_PROJECTS, within = Any)
+    # mod.GENERATION_TECHNOLOGIES_SOD = Set(
+    #     initialize = lambda m: {m.gen_tech_sod[g] for g in m.GENERATION_PROJECTS},
+    #     ordered = False,
+    # )
+
+    # mod.region_sod = Param(mod.GENERATION_PROJECTS, within = Any)
+    # mod.REGIONS_SOD = Set(
+    #     initialize = lambda m: {m.region_sod[g] for g in m.GENERATION_PROJECTS},
+    #     ordered = False,
+    # )
+
+    # mod.resource_id_sod = Param(mod.GENERATION_PROJECTS, within = Any)
+    # mod.RESOURCE_ID_SOD = Set(
+    #     initialize = lambda m: {m.resource_id_sod[g] for g in m.GENERATION_PROJECTS},
+    #     ordered = False,
+    # )
+    ### END SOD UPDATE
+
+    ### SOD UPDATE: add sets for gen_tech_sod and region_sod
+    mod.GENERATION_TECHNOLOGIES_SOD = Set(dimen = 1)
+    mod.gen_tech_sod = Param(
+        mod.GENERATION_PROJECTS,
+        validate = lambda m, val, g: val in m.GENERATION_TECHNOLOGIES_SOD,
+        within = Any,
+    )
+
+    mod.REGIONS_SOD = Set(dimen = 1)
+    mod.region_sod = Param(
+        mod.GENERATION_PROJECTS, 
+        validate=lambda m, val, g: val in m.REGIONS_SOD,
+        within = Any,
+    )
+
+    mod.RESOURCE_ID_SOD = Set(dimen = 1)
+    mod.resource_id_sod = Param(
+        mod.GENERATION_PROJECTS, 
+        validate=lambda m, val, g: val in m.RESOURCE_ID_SOD or val == 'None',
+        within = Any,
+    )
+    ### END SOD UPDATE
+    
     mod.ENERGY_SOURCES = Set(dimen=1)
     mod.gen_energy_source = Param(
         mod.GENERATION_PROJECTS,
@@ -561,6 +605,9 @@ def load_inputs(mod, match_data, inputs_dir):
         param=[
             mod.gen_load_zone,
             mod.gen_tech,
+            mod.gen_tech_sod,
+            mod.region_sod,
+            mod.resource_id_sod,
             mod.gen_is_variable,
             mod.gen_is_hybrid,
             mod.gen_is_storage,
@@ -605,6 +652,18 @@ def load_inputs(mod, match_data, inputs_dir):
     match_data.load_aug(
         filename=os.path.join(inputs_dir, "energy_sources.csv"), set=mod.ENERGY_SOURCES
     )
+    match_data.load_aug(
+        filename=os.path.join(inputs_dir, "gen_techs_sod.csv"), set=mod.GENERATION_TECHNOLOGIES_SOD
+    )
+    match_data.load_aug(
+        filename=os.path.join(inputs_dir, "regions_sod.csv"), set=mod.REGIONS_SOD
+    )
+    match_data.load_aug(
+        filename=os.path.join(inputs_dir, "resource_ids_sod.csv"), set=mod.RESOURCE_ID_SOD
+    )
+
+    ## I think i need to sat the gen_tech_sod, res_id, region_sod parameters here
+    ## I should move them to their own section of the generators tab inputs too
 
 
 def post_solve(m, outdir):

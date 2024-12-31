@@ -548,6 +548,8 @@ def generate_inputs(model_workspace):
             raise ValueError("The storage tab contains a missing value. Please fix")
         # add defaults for storage
         xl_storage["gen_tech"] = "Storage"
+        #xl_storage["gen_tech_sod"] = "Storage"
+        xl_storage["resource_id_sod"] = "None"
         xl_storage["gen_is_storage"] = 1
         xl_storage["gen_is_variable"] = 0
         xl_storage["gen_is_baseload"] = 0
@@ -632,6 +634,65 @@ def generate_inputs(model_workspace):
         xl_midterm_ra = pd.read_excel(
             io=model_inputs, sheet_name="midterm_RA_requirement", skiprows=1
         ).dropna(axis=1, how="all")
+
+    if "match_model.optional.resource_adequacy_SOD" in unused_modules:
+        pass
+    else:
+
+        ### RA SOD Sheets from Model Inputs
+
+        ## RA SOD Requirements
+        xl_ra_sod_reqs = pd.read_excel(
+            io=model_inputs, sheet_name="RA_SOD_reqs", skiprows=1
+        ).dropna(axis=1, how="all")
+        ra_sod_requirement = xl_ra_sod_reqs.copy()[xl_ra_sod_reqs["RA_RESOURCE"] == "system_RA"]
+        ra_sod_requirement["period"] = year
+        ra_sod_requirement = ra_sod_requirement[
+            ["period", "month", "hour", "ra_requirement"]
+        ]
+
+        ## RA SOD Exceedance Vals
+        xl_ra_exceedance_vals = pd.read_excel(
+            io = model_inputs, sheet_name='RA_SOD_exceedance_vals', skiprows=1
+        ).dropna(axis = 1, how = 'all')
+        ra_exceedance_vals = xl_ra_exceedance_vals.copy()
+        ra_exceedance_vals['period'] = year
+        ra_exceedance_vals = ra_exceedance_vals[
+            ['period', 'month', 'hour',  'gen_tech_sod', 'region_sod', 'exceedance_val']
+        ]
+
+        ## RA SOD NQCs
+        xl_ra_nqcs = pd.read_excel(
+            io = model_inputs, sheet_name= 'RA_SOD_nqc', skiprows=1
+        ).dropna(axis = 1, how = 'all')
+        ra_nqcs = xl_ra_nqcs.copy()
+        ra_nqcs['period'] = year
+        ra_nqcs = ra_nqcs[
+            ['period', 'month','resource_id_sod',  'nqc']
+        ]
+
+        ## RA SOD Costs
+        xl_ra_sod_costs = pd.read_excel(
+            io=model_inputs, sheet_name="RA_SOD_costs", skiprows=1
+        ).dropna(axis=1, how = 'all')
+        ra_sod_costs = xl_ra_sod_costs.copy()
+        ra_sod_costs['period'] = year
+        ra_sod_costs = ra_sod_costs[
+            ['period', 'month', 'ra_cost', 'ra_resell_value']
+        ]
+
+        ## RA SOD Storage Adders
+        xl_ra_sod_storage_adders = pd.read_excel(
+            io=model_inputs, sheet_name="RA_SOD_storage_adders", skiprows=1
+        ).dropna(axis=1, how = 'all')
+        ra_sod_storage_adders = xl_ra_sod_storage_adders.copy()
+        ra_sod_storage_adders['period'] = year
+        ra_sod_storage_adders = ra_sod_storage_adders[
+            ['period', 'month', 'storage_ra_adders']
+        ]
+
+        ### END RA SOD SHEETS
+
 
     xl_nodal_prices = pd.read_excel(
         io=model_inputs, sheet_name="nodal_prices", index_col="Datetime", skiprows=2
@@ -1136,6 +1197,9 @@ def generate_inputs(model_workspace):
                 "GENERATION_PROJECT",
                 "gen_load_zone",
                 "gen_tech",
+                "gen_tech_sod", # SOD UPDATE
+                "region_sod", # SOD UPDATE
+                "resource_id_sod", # SOD UPDATE
                 "gen_emission_factor",
                 "gen_cambium_region",
                 "gen_is_additional",
@@ -1192,6 +1256,31 @@ def generate_inputs(model_workspace):
                 .rename(columns={"gen_energy_source": "energy_source"})
             )
             energy_sources.to_csv(input_dir / "energy_sources.csv", index=False)
+
+            ### WRITE RA SOD INPUT CSVs
+            print("...writing Gen Techs here...")
+            # gen techs sod csv
+            gen_techs_sod = (
+                set_gens[['gen_tech_sod']]
+                .drop_duplicates(ignore_index=True)
+            )
+            gen_techs_sod.to_csv(input_dir / "gen_techs_sod.csv", index = False)
+
+            # regions sod csv
+            regions_sod = (
+                set_gens[['region_sod']]
+                .drop_duplicates(ignore_index=True)
+            )
+            regions_sod.to_csv(input_dir / "regions_sod.csv", index = False)
+
+            # resource ids sod csv
+            resource_ids_sod = (
+                set_gens[['resource_id_sod']]
+                .drop_duplicates(ignore_index=True)
+            )
+            resource_ids_sod.to_csv(input_dir / "resource_ids_sod.csv", index = False)
+
+            ### END RA SOD csvs
 
             # LOAD DATA #
 
@@ -1252,6 +1341,39 @@ def generate_inputs(model_workspace):
                 xl_midterm_ra.to_csv(
                     input_dir / "midterm_reliability_requirement.csv", index=False
                 )
+
+            # RA SOD Data
+            if "match_model.optional.resource_adequacy_SOD" in module_list:
+
+                ra_sod_requirement.to_csv(input_dir/"ra_sod_requirement.csv", index = False)
+
+                # filter exceedance values to only include combos of gen_tech_sod, region that are in the all gens list for the given scenario
+                gpi_labels_list = generation_projects_info.copy()
+                gpi_labels_list['gen_tech_region_lbl'] = gpi_labels_list['gen_tech_sod'] + ' ' + gpi_labels_list['region_sod']
+                gpi_labels_list = list(
+                    gpi_labels_list['gen_tech_region_lbl'].unique()
+                )
+                ra_exceedance_vals_scenario = ra_exceedance_vals.copy()
+                ra_exceedance_vals_scenario['gen_tech_region_lbl'] = ra_exceedance_vals_scenario['gen_tech_sod'] + ' ' + ra_exceedance_vals_scenario['region_sod']
+                ra_exceedance_vals_scenario = ra_exceedance_vals_scenario[
+                    ra_exceedance_vals_scenario['gen_tech_region_lbl'].isin(gpi_labels_list)
+                    ]
+                ra_exceedance_vals_scenario.drop(columns=['gen_tech_region_lbl'], inplace=True)
+                ra_exceedance_vals_scenario.to_csv(input_dir/"ra_exceedance_values.csv", index = False)
+
+                # filter nqcs to only include resources ids that are in the all gens list for the given scenario
+                res_ids_list = list(
+                    generation_projects_info['resource_id_sod'].unique()
+                )
+                ra_nqcs_scenario = ra_nqcs[
+                    ra_nqcs['resource_id_sod'].isin(res_ids_list)
+                ]
+                ra_nqcs_scenario.to_csv(input_dir/"ra_nqc_values.csv", index = False)
+
+                ra_sod_costs.to_csv(input_dir/"ra_sod_costs.csv", index = False)
+
+                ra_sod_storage_adders.to_csv(input_dir/"ra_sod_storage_adders.csv", index = False)
+
 
             # pricing_nodes.csv
             node_list = list(set_gens.gen_pricing_node.unique())

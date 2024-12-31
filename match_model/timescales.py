@@ -259,6 +259,11 @@ def define_components(mod):
     )
     mod.DAYS = Set(ordered=True, initialize=range(1, 366))
 
+    ### RA SOD Update: set of hours
+    mod.HOURS = Set(
+        ordered = True, initialize = range(1, 25), dimen=1
+    )
+
     # specify which month each timepoint is associated with
     mod.tp_month = Param(mod.TIMEPOINTS, within=mod.MONTHS)
     mod.tp_day = Param(mod.TIMEPOINTS, within=mod.DAYS)

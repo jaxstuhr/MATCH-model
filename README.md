@@ -48,7 +48,8 @@ See "INSTALL.md" for instructions on how to download and install MATCH on your m
  ┣ 📂optional
  ┃ ┣ 📜emissions_optimization.py: co-optimizes the consequential emissions impact of the portfolio
  ┃ ┣ 📜wholesale_pricing.py: adds nodal pricing dynamics to the model
- ┃ ┣ 📜resource_adequacy.py: defines RA requirements and positions according to the current rules in CA
+ ┃ ┣ 📜resource_adequacy.py: defines RA requirements and positions according to the old (pre-2025) rules in CA
+ ┃ ┣ 📜resource_adequacy_SOD.py: defines RA requirements and positions according to the current slice-of-day rules in CA
  ┗ ┗ 📜storage.py: defines how to build and dispatch energy storage 
  ┣ 📂reporting
  ┃ ┣ 📜generate_report.py: runs the summary reports as part of the model post-solve

@@ -4,17 +4,14 @@
 """
 Determines the resource adequacy value for built resources and adds RA open position cost to the objective function
 
-California Independent System Operator Issue paper on Resource Adequacy which
-includes both capacity and flexibility requirements. Capacity reserve
-requirements can be both system-wide and local, and can potentially accomodate
-anything that injects, withdraws or reshapes power. Note that the flexibility
-requirements finally includes an energy component, not just ramping capabilities.
-http://www.caiso.com/Documents/IssuePaper-RegionalResourceAdequacy.pdf
+Starting in 2025, the CPUC dramatically changed the Resource Adequacy requirements that LSE's ust meet to meet compliance.
+The new requirement is called "Slice of Day". Each LSE has a 24-hour profile of its Peak Demand (MW) for each month that it must meet from RA eligible resources.
+Variable Gen Resources contribute to RA based on an exceedance values determined by the CPUC based on historical generation during peak demand hours.
+Hydro resources contribute to RA based on a monthly NQC values. 
+Storage resources allow LSEs to shift RA between hours but have no qualifying capacity themselves. 
+A detailed explanation of the SOD framework can be found here: https://www.cpuc.ca.gov/-/media/cpuc-website/divisions/energy-division/documents/resource-adequacy-homepage/resource-adequacy-compliance-materials/guides-and-resources/2025-ra-slice-of-day-filing-guide.pdf
 
-CA ISO comments filed with the Public Utilities Commission on resource adequacy
-rules (and the need to improve them)
-https://www.caiso.com/Documents/Jan29_2016_Comments_2017Track1Proposals_ResourceAdequacyProgram_R14-10-010.pdf
-
+This module attributes RA value to resources in a portfolio and optimizes the RA position to minimize required procurement of 24/7 RA products. The cost of this new RA is added to the objective function.
 """
 
 import os
@@ -42,24 +39,6 @@ def define_arguments(argparser):
 
 
 def define_components(mod):
-    """
-    MONTHS
-
-    RA_REQUIREMENT_CATEGORIES
-
-    LOCAL_RELIABILITY_AREAS
-
-    RAR_AREAS
-
-    tp_month[t] defines which month (1-12) each timepoint belongs to
-
-    """
-
-    # Define Parameters
-    ###################
-
-
-    ### SOD UPDATE
     
     ## For each month, we calculate NOP[t] = RA_Obl[t] * PRM - PPA_RA[t] - Contract_RA[t] - Alloc_RA[t] for t in 1:24
     ## For each month there is a Storage_P and Storage_E input that are based on our portfolio
@@ -75,12 +54,6 @@ def define_components(mod):
     ## 3. For all hours t, SUM(Discharge[t]) = Sum(Charge[t]) * 0.8 (total charge*RTE = total discharge)
     ## 4,5. For each hour t, charge[t] <= storage_cap and discharge[t] <= storage_cap
     ## 6,7. For each hour t, State[t] * Charge[t] = 0 and (1-State[t]) * Discharge[t] = 0 (ensures battery is either charging or discharging)
-
-    ## Other needed updates for SOD Implementation:
-
-    ## Read in RA_SOD_reqs, RA_SOD_exceedance_vals, RA_SOD_costs in generate_inputs script
-    ## region set in build.pys for generators, add region col in model inputs, add region col to generators in generate_input_files.py
-    ## for now coding as if a region set exists
 
     # ra eligibility of generators
     mod.gen_is_ra_eligible = Param(mod.GENERATION_PROJECTS, within=Boolean)
@@ -287,26 +260,13 @@ def define_components(mod):
     # add RA cost to objective function
     mod.Cost_Components_Per_Period.append("RAOpenPositionCost")
 
-    ### END SOD UPDATE
 
 
 
 def load_inputs(mod, match_data, inputs_dir):
-    """
-    reserve_capacity_value.csv
-        GEN, TIMEPOINT, elcc
 
-    planning_reserve_requirement_zones.csv
-        PLANNING_RESERVE_REQUIREMENTS, prr_cap_reserve_margin, prr_enforcement_timescale
 
-    generation_projects_info.csv
-        ..., gen_can_provide_cap_reserves
-
-    planning_reserve_requirement_zones.csv
-        PRR, ZONE
-
-    """
-
+    ## Info on projects in currnet porfolio
     match_data.load_aug(
         filename=os.path.join(inputs_dir, "generation_projects_info.csv"),
         auto_select=True,
@@ -342,17 +302,18 @@ def load_inputs(mod, match_data, inputs_dir):
         param=[mod.ra_sod_cost, mod.ra_sod_resell_value],
     )
 
+    ## Additional Storage RA Capacity
     match_data.load_aug(
         filename = os.path.join(inputs_dir, "ra_sod_storage_adders.csv"),
         select = ('period', 'month', 'storage_ra_adders'),
         param =[mod.storage_adders]
     )
 
-    ### END SOD Data
 
 
 def post_solve(instance, outdir):
-    """ """
+    
+    ## Build output dataframe summarizing RA SOD results
     ra_dat = [
         {
             "Period": p,
